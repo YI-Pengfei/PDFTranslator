@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Apr  6 15:31:11 2020
-
-@author: y1064
+Tkinter教程 https://www.jianshu.com/p/91844c5bca78
+百度翻译api: http://api.fanyi.baidu.com/doc/21
 """
 import tkinter
 import time
@@ -11,7 +10,7 @@ import json
 import random
 import hashlib 
 
-
+## 1. 调用百度翻译API进行文本翻译 
 class BaiduTranslate:
     def __init__(self,fromLang,toLang):
         self.url = 'https://fanyi-api.baidu.com/api/trans/vip/translate'
@@ -45,40 +44,56 @@ class BaiduTranslate:
         return translate_results
 
 
-
-def translate():
-    content = inp1.get()
+# 2. GUI
+def translate(input1_text,txt,txt2):
+    content = input1_text.get(0.0,tkinter.END) # 接收输入的文本 0.0表示从第0行第0列开始读取 End表示最后一个字符
     content = content.replace('\n',' ')
-    BaiduTranslate_test = BaiduTranslate('en','zh')
+    BaiduTranslate_test = BaiduTranslate('auto','zh')
     Results = BaiduTranslate_test.BdTrans(content)#要翻译的词组
     txt.insert(tkinter.END,content) # 原文
     txt2.insert(tkinter.END,Results[0]['dst']) # 译文
-#    inp1.delete(0, END)  # 清空输入
-    
+#    input1_entry.delete(0, END)  # 清空输入
 
+""" 
+Label: 标签 单行文本显示
+Entry	输入框	接收单行文本输入
+
+
+place布局方法
+x,y 控件的位置
+relx,rely 相对位置 0.0-1.0
+height, width:高度宽度
+relheight,relwidth:相对高度、宽度 0.0-1.0
+
+"""
 
 
 root = tkinter.Tk()
 root.geometry('900x600')
 root.title('百度翻译')
+# 提示内容--请输入
+label1 = tkinter.Label(root, text='请输入您要查询的内容', font=('微软雅黑',16),)
+label1.place(relx=0.2, rely=0.05,relwidth=0.6, relheight=0.1)  # , relwidth=0.8, relheight=0.1
+# 接收多行文本输入
+input1_text = tkinter.Text(root)
+input1_text.place(relx=0.1, rely=0.2, relwidth=0.7, relheight=0.2)
+#
+#
+# 可传参的 command方法
+btn1 = tkinter.Button(root, text='查询', command=lambda:translate(input1_text,txt,txt2))
+btn1.place(relx=0.8, rely=0.2, relwidth=0.1, relheight=0.1)
 
-lb1 = tkinter.Label(root, text='请输入您要查询的内容')
-lb1.place(relx=0.1, rely=0.1, relwidth=0.8, relheight=0.1)
-inp1 = tkinter.Entry(root)
-inp1.place(relx=0.1, rely=0.1, relwidth=0.8, relheight=0.2)
 
-
-# 方法-直接调用 run1()
-btn1 = tkinter.Button(root, text='查询', command=translate)
-btn1.place(relx=0.1, rely=0.4, relwidth=0.3, relheight=0.1)
-
-
-# 在窗体垂直自上而下位置60%处起，布局相对窗体高度40%高的文本框
 txt = tkinter.Text(root)
-txt.place(rely=0.5, relheight=0.2)
+txt.place(relx=0.1, rely=0.45, relwidth=0.7, relheight=0.2)
 
-# 在窗体垂直自上而下位置60%处起，布局相对窗体高度40%高的文本框
+
 txt2 = tkinter.Text(root)
-txt2.place(rely=0.7, relheight=0.2)
+txt2.place(relx=0.1, rely=0.7, relwidth=0.7, relheight=0.2)
+## 创建Scrollbar组件，设置该组件与text2的纵向滚动关联
+#scroll = tkinter.Scrollbar(root, command=txt2.yview)
+#scroll.place()
+### 设置text2的纵向滚动影响scroll滚动条
+#txt2.configure(yscrollcommand=scroll.set)
 
 root.mainloop()
