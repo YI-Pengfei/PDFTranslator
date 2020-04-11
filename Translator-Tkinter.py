@@ -2,61 +2,60 @@
 """
 Tkinter教程 https://www.jianshu.com/p/91844c5bca78
 百度翻译api: http://api.fanyi.baidu.com/doc/21
+在Linux上pip install pyscreenshot，然后把from PIL import imagegrab改成import pyscreenshot as ImageGrab，其他无需改动
 """
 import os
 import tkinter
 import tkinter.filedialog
+from tkinter import ttk
 import time
 import requests
 import random
 import hashlib 
 import base64
 from PIL import ImageGrab
+#import pyscreenshot as ImageGrab
 
+fromLang='auto' # 源语言
+toLang='zh' # 目标语言
 
 # 1. 第一部分 百度翻译API做文本翻译 
-class BaiduTranslate:
-    """调用百度翻译API进行文本翻译"""
-    def __init__(self,fromLang,toLang):
-        self.url = 'https://fanyi-api.baidu.com/api/trans/vip/translate'
-        self.appid="20200405000412790" #申请的账号
-        self.secretKey = 'hjlwBKKmIiKczeM8A5Aq'#账号密码
-        self.salt = random.randint(32768, 65536)
-        self.headers = {'Referer':'https://fanyi-api.baidu.com/',
+def BaiduTranslator(text,fromLang='auto',toLang='zh'):
+    request_url = 'https://fanyi-api.baidu.com/api/trans/vip/translate'
+    appid="20200405000412790" #申请的账号
+    secretKey = 'hjlwBKKmIiKczeM8A5Aq'#账号密码
+    salt = random.randint(32768, 65536)
+    sign = appid + text + str(salt) + secretKey
+    md = hashlib.md5()
+    md.update(sign.encode(encoding='utf-8'))
+    sign = md.hexdigest()
+    params = {'appid':appid, 
+              'from':fromLang,
+              'to':toLang,
+              'salt':salt,
+              'q':text,
+              'sign':sign}
+    headers = {'Referer':'https://fanyi-api.baidu.com/',
                 'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36X-Requested-With: XMLHttpRequest' }
-        self.params = {'appid':self.appid, 
-                       'from':fromLang,
-                       'to':toLang,
-                       'salt':self.salt
-                       }
-
-    def BdTrans(self,text):
-        sign = self.appid + text + str(self.salt) + self.secretKey
-        md = hashlib.md5()
-        md.update(sign.encode(encoding='utf-8'))
-        sign = md.hexdigest()
-        self.params['q'] = text
-        self.params['sign'] = sign
-
-        response = requests.post(self.url, data=self.params, headers=self.headers)
-        if response:
-            return response.json()['trans_result']
+    response = requests.post(request_url, data=params, headers=headers) # post请求 
+    if response:
+        return response.json()['trans_result']
+    return "error"
 
 
 
 # 2. GUI
-def translate(input1_text,text1,text2, content=''):
+def translate_TK(input1_TEXT, output1_TEXT, output2_TEXT, content=''):
     """ 文本翻译 (给button的方法)
     """
-    text1.delete(0.0,tkinter.END) # 清空文本框中的内容
-    text2.delete(0.0,tkinter.END) 
+    output1_TEXT.delete(0.0,tkinter.END) # 清空文本框中的内容
+    output2_TEXT.delete(0.0,tkinter.END) 
     if not content: # 没有直接传进 待翻译的内容，则从文本框1中读取
-        content = input1_text.get(0.0,tkinter.END) # 接收输入的文本 0.0表示从第0行第0列开始读取 End表示最后一个字符
-    content = content.replace('\n',' ')
-    BaiduTranslate_test = BaiduTranslate('auto','zh') # en
-    Results = BaiduTranslate_test.BdTrans(content)#要翻译的词组
-    text1.insert(0.0,content) # 原文
-    text2.insert(0.0,Results[0]['dst']) # 译文
+        content = input1_TEXT.get(0.0,tkinter.END) # 接收输入的文本 0.0表示从第0行第0列开始读取 End表示最后一个字符
+    content = content.replace('\n',' ').strip()
+    Results = BaiduTranslator(content, fromLang, toLang)
+    output1_TEXT.insert(0.0,content) # 原文
+    output2_TEXT.insert(0.0,Results[0]['dst']) # 译文
 
 
 
@@ -127,7 +126,7 @@ class FreeCapture():
         self.canvas.pack(fill=tkinter.BOTH, expand=tkinter.YES)
 
 
-def screenShot(root, button_screenShot, input1_text, text1, text2):
+def screenShot_TK(root, screenShot_BUTTON, input1_TEXT, output1_TEXT, output2_TEXT):
     """ 自由截屏的函数 (button按钮的事件)
     """
 #    print("test")
@@ -139,13 +138,13 @@ def screenShot(root, button_screenShot, input1_text, text1, text2):
     im.close()
     # 进行自由截屏 
     w = FreeCapture(root, 'temp.png')
-    button_screenShot.wait_window(w.top)
+    screenShot_BUTTON.wait_window(w.top)
     # 截图结束，恢复主窗口，并删除temp.png文件
     root.state('normal')
     os.remove('temp.png')
     ## 完成自由截屏，OCR识别截屏内容
     content = OCR()
-    translate(input1_text,text1,text2,content=content)
+    translate_TK(input1_TEXT,output1_TEXT,output2_TEXT,content=content)
 
 
 # 3. 第三部分 OCR文字识别
@@ -185,26 +184,16 @@ def OCR(pic='temp2.png'):
     return content
 
 
-def clear_input(input1_text):
+def clear_TEXT_TK():
     """ 清空文本框
     """
-    input1_text.delete(0.0, tkinter.END)  # 清空输入
-    text1.delete(0.0,tkinter.END) # 清空文本框中的内容
-    text2.delete(0.0,tkinter.END) 
+    input1_TEXT.delete(0.0, tkinter.END)  # 清空输入
+    output1_TEXT.delete(0.0,tkinter.END) # 清空文本框中的内容
+    output2_TEXT.delete(0.0,tkinter.END) 
 
 
-""" 
-Label: 标签 单行文本显示
-Entry	输入框	接收单行文本输入
 
-place布局方法
-x,y 控件的位置
-relx,rely 相对位置 0.0-1.0
-height, width:高度宽度
-relheight,relwidth:相对高度、宽度 0.0-1.0
-"""
-
-
+""" 初始化一个根窗体实例 """
 root = tkinter.Tk()
 root.geometry('1000x700')
 root.title('百度翻译')
@@ -212,33 +201,42 @@ root.title('百度翻译')
 label1 = tkinter.Label(root, text='请输入您要查询的内容', font=('微软雅黑',16),)
 label1.place(relx=0.2, rely=0.05,relwidth=0.6, relheight=0.1)  # , relwidth=0.8, relheight=0.1
 # 接收多行文本输入
-input1_text = tkinter.Text(root)
-input1_text.place(relx=0.1, rely=0.2, relwidth=0.7, relheight=0.2)
-
-
+input1_TEXT = tkinter.Text(root)
+input1_TEXT.place(relx=0.1, rely=0.2, relwidth=0.7, relheight=0.2)
+# 组合框
+def select_Lang(event):
+    """选择目标语言"""
+    dic = {0:'zh',1:'en',2:'kor',3:'jp'}
+    c = dic[comb.current()]
+    global toLang  #在函数中为函数外的变量赋值
+    toLang = c
+   
+comb = ttk.Combobox(root,values=['译汉','译英','译韩','译日'])
+comb.place(relx=0.05,rely=0.05,relwidth=0.2)
+comb.current(0) # 默认为译汉 
+comb.bind('<<ComboboxSelected>>', select_Lang)
 # ================== 布置查词按钮 ====================================
-button_query = tkinter.Button(root, text='查询', command=lambda:translate(input1_text,text1,text2))
-button_query.place(relx=0.8, rely=0.2, relwidth=0.1, relheight=0.1)
+query_BUTTON = tkinter.Button(root, text='查询', command=lambda:translate_TK(input1_TEXT,output1_TEXT,output2_TEXT))
+query_BUTTON.place(relx=0.8, rely=0.2, relwidth=0.1, relheight=0.1)
 # 可传参的 command方法
-#button2 = tkinter.Button(root, text='清空', command=lambda:clear_input(input1_text))
+#button2 = tkinter.Button(root, text='清空', command=lambda:clear_input(input1_TEXT))
 #button2.place(relx=0.8, rely=0.3, relwidth=0.1, relheight=0.1)
 # ================== 布置截屏按钮 ====================================
-button_screenShot = tkinter.Button(root, text='截屏翻译', command=lambda:screenShot(root, button_screenShot, input1_text, text1, text2))
-button_screenShot.place(relx=0.8, rely=0.3, relwidth=0.1, relheight=0.1)
+screenShot_BUTTON = tkinter.Button(root, text='截屏翻译', command=lambda:screenShot_TK(root, screenShot_BUTTON, input1_TEXT, output1_TEXT, output2_TEXT))
+screenShot_BUTTON.place(relx=0.8, rely=0.3, relwidth=0.1, relheight=0.1)
 
 
+output1_TEXT = tkinter.Text(root)
+output1_TEXT.place(relx=0.55, rely=0.5, relwidth=0.4, relheight=0.4)
 
-text1 = tkinter.Text(root)
-text1.place(relx=0.55, rely=0.5, relwidth=0.4, relheight=0.4)
-
-text2 = tkinter.Text(root)
-text2.place(relx=0.05, rely=0.5, relwidth=0.4, relheight=0.4)
+output2_TEXT = tkinter.Text(root)
+output2_TEXT.place(relx=0.05, rely=0.5, relwidth=0.4, relheight=0.4)
 
 
-## 创建Scrollbar组件，设置该组件与text2的纵向滚动关联
-#scroll = tkinter.Scrollbar(root, command=text2.yview)
+## 创建Scrollbar组件，设置该组件与output2_TEXT的纵向滚动关联
+#scroll = tkinter.Scrollbar(root, command=output2_TEXT.yview)
 #scroll.place()
-### 设置text2的纵向滚动影响scroll滚动条
-#text2.configure(yscrollcommand=scroll.set)
-
+### 设置output2_TEXT的纵向滚动影响scroll滚动条
+#output2_TEXT.configure(yscrollcommand=scroll.set)
+#print(toLang)
 root.mainloop()
