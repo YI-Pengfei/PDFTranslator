@@ -3,6 +3,9 @@
 Tkinter教程 https://www.jianshu.com/p/91844c5bca78
 百度翻译api: http://api.fanyi.baidu.com/doc/21
 在Linux上pip install pyscreenshot，然后把from PIL import imagegrab改成import pyscreenshot as ImageGrab，其他无需改动
+
+PyInstaller封装命令：
+    pyinstaller --icon="baidufanyi.ico" -F Translator-Tkinter.py -w
 """
 import os
 import tkinter
@@ -170,6 +173,8 @@ def OCR(pic='temp2.png'):
     # 二进制方式打开图片文件
     f = open(pic, 'rb') #
     img = base64.b64encode(f.read())
+    f.close()
+    os.remove(pic) # 删除缓存文件
     # 通用文字识别 （调用量限制 50000次/天免费）
     request_url = "https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic"
     params = {"image":img,
