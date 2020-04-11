@@ -107,7 +107,7 @@ class FreeCapture():
             except Exception as e:
                 pass
 
-            time.sleep(0.05)
+            time.sleep(0.5)
             #考虑鼠标左键从右下方按下而从左上方抬起的截图
             left, right = sorted([self.X.get(), event.x])
             top, bottom = sorted([self.Y.get(), event.y])
@@ -123,7 +123,7 @@ class FreeCapture():
         self.canvas.bind('<B1-Motion>', onLeftButtonMove) # 按下左键
         self.canvas.bind('<ButtonRelease-1>', onLeftButtonUp) # 抬起左键
         #让canvas充满窗口，并随窗口自动适应大小
-        self.canvas.pack(fill=tkinter.BOTH, expand=tkinter.YES)
+        self.canvas.pack(fill=tkinter.BOTH, expand=tkinter.YES) #
 
 
 def screenShot_TK(root, screenShot_BUTTON, input1_TEXT, output1_TEXT, output2_TEXT):
@@ -131,7 +131,7 @@ def screenShot_TK(root, screenShot_BUTTON, input1_TEXT, output1_TEXT, output2_TE
     """
 #    print("test")
     root.state('icon')  # 最小化主窗体
-    time.sleep(0.05)
+    time.sleep(0.5)
     im = ImageGrab.grab()
     # 暂存全屏截图
     im.save('temp.png')
