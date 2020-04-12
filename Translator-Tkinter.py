@@ -48,13 +48,16 @@ def BaiduTranslator(text,fromLang='auto',toLang='zh'):
 
 
 # 2. GUI
-def translate_TK(input1_TEXT, output1_TEXT, output2_TEXT, content=''):
+def translate_TK(content=''):
     """ 文本翻译 (给button的方法)
     """
     output1_TEXT.delete(0.0,tkinter.END) # 清空文本框中的内容
     output2_TEXT.delete(0.0,tkinter.END) 
     if not content: # 没有直接传进 待翻译的内容，则从文本框1中读取
         content = input1_TEXT.get(0.0,tkinter.END) # 接收输入的文本 0.0表示从第0行第0列开始读取 End表示最后一个字符
+    else: # 有直接传进来的内容（是OCR的结果）
+        input1_TEXT.delete(0.0,tkinter.END) 
+        input1_TEXT.insert(0.0,content) # 显示OCR识别的原始结果
     content = content.replace('\n',' ').strip()
     Results = BaiduTranslator(content, fromLang, toLang)
     output1_TEXT.insert(0.0,content) # 原文
@@ -66,7 +69,7 @@ def translate_TK(input1_TEXT, output1_TEXT, output2_TEXT, content=''):
 class FreeCapture():
     """ 用来显示全屏幕截图并响应二次截图的窗口类
     """
-    def __init__(self, root, img):
+    def __init__(self, img):
         #变量X和Y用来记录鼠标左键按下的位置
         self.X = tkinter.IntVar(value=0)
         self.Y = tkinter.IntVar(value=0)
@@ -129,7 +132,7 @@ class FreeCapture():
         self.canvas.pack(fill=tkinter.BOTH, expand=tkinter.YES) #
 
 
-def screenShot_TK(root, screenShot_BUTTON, input1_TEXT, output1_TEXT, output2_TEXT):
+def screenShot_TK():
     """ 自由截屏的函数 (button按钮的事件)
     """
 #    print("test")
@@ -140,14 +143,14 @@ def screenShot_TK(root, screenShot_BUTTON, input1_TEXT, output1_TEXT, output2_TE
     im.save('temp.png')
     im.close()
     # 进行自由截屏 
-    w = FreeCapture(root, 'temp.png')
+    w = FreeCapture('temp.png')
     screenShot_BUTTON.wait_window(w.top)
     # 截图结束，恢复主窗口，并删除temp.png文件
     root.state('normal')
     os.remove('temp.png')
     ## 完成自由截屏，OCR识别截屏内容
     content = OCR()
-    translate_TK(input1_TEXT,output1_TEXT,output2_TEXT,content=content)
+    translate_TK(content=content)
 
 
 # 3. 第三部分 OCR文字识别
@@ -221,13 +224,10 @@ comb.place(relx=0.05,rely=0.05,relwidth=0.2)
 comb.current(0) # 默认为译汉 
 comb.bind('<<ComboboxSelected>>', select_Lang)
 # ================== 布置查词按钮 ====================================
-query_BUTTON = tkinter.Button(root, text='查询', command=lambda:translate_TK(input1_TEXT,output1_TEXT,output2_TEXT))
+query_BUTTON = tkinter.Button(root, text='查询', command=translate_TK)
 query_BUTTON.place(relx=0.8, rely=0.2, relwidth=0.1, relheight=0.1)
-# 可传参的 command方法
-#button2 = tkinter.Button(root, text='清空', command=lambda:clear_input(input1_TEXT))
-#button2.place(relx=0.8, rely=0.3, relwidth=0.1, relheight=0.1)
 # ================== 布置截屏按钮 ====================================
-screenShot_BUTTON = tkinter.Button(root, text='截屏翻译', command=lambda:screenShot_TK(root, screenShot_BUTTON, input1_TEXT, output1_TEXT, output2_TEXT))
+screenShot_BUTTON = tkinter.Button(root, text='截屏翻译', command=screenShot_TK)
 screenShot_BUTTON.place(relx=0.8, rely=0.3, relwidth=0.1, relheight=0.1)
 
 
